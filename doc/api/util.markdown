@@ -3,12 +3,6 @@
 These functions are in the module `'util'`. Use `require('util')` to access
 them.
 
-### util.format()
-
-+
-
-+Returns a formatted type of value using the first argument as a `printf`-like format.
-
 +
 +### util.format()
 
