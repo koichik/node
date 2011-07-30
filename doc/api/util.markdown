@@ -4,6 +4,31 @@ These functions are in the module `'util'`. Use `require('util')` to access
 them.
 
 
+### util.format()
+
+Returns a formatted string using the first argument as a `printf`-like format.
+
+The first argument is a string which may contain zero or more *placeholders*.
+Placeholders are replaced with a converted value from corresponding argument.
+Placeholder can be:
+
+* `%s` - Converts a string representation.
+* `%d` - Converts a number representation (both integer and floating point).
+* `%j` - Converts a JSON representation.
+* `%%` - Converts a single percent sign (`'%'`).
+
+If the placeholder does not correspond to an available argument, then it is
+given an `undefined`.
+
+If there are more arguments than placeholders, the extra arguments are
+converted to string by `util.inspect()` and these strings are concatenated,
+delimited by a space.
+
+If first argument is not a string then `util.format()` returns a string that
+concatenated all arguments in a space-delimited line. `util.inspect()` is used
+on each argument.
+
+
 ### util.debug(string)
 
 A synchronous output function. Will block the process and
