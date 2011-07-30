@@ -3,30 +3,61 @@
 These functions are in the module `'util'`. Use `require('util')` to access
 them.
 
-
 ### util.format()
 
-Returns a formatted string using the first argument as a `printf`-like format.
++
 
-The first argument is a string which may contain zero or more *placeholders*.
-Placeholders are replaced with a converted value from corresponding argument.
-Placeholder can be:
++Returns a formatted type of value using the first argument as a `printf`-like format.
 
-* `%s` - Converts a string representation.
-* `%d` - Converts a number representation (both integer and floating point).
-* `%j` - Converts a JSON representation.
-* `%%` - Converts a single percent sign (`'%'`).
++
++### util.format()
 
-If the placeholder does not correspond to an available argument, then it is
-given an `undefined`.
++
 
-If there are more arguments than placeholders, the extra arguments are
-converted to string by `util.inspect()` and these strings are concatenated,
-delimited by a space.
++Returns a formatted type of value using the first argument as a `printf`-like format.
 
-If first argument is not a string then `util.format()` returns a string that
-concatenated all arguments in a space-delimited line. `util.inspect()` is used
-on each argument.
++
+
++The first argument is a string which may contain zero or more *placeholders*.
+
++Placeholders replace a corresponding argument with a converted value and util.format() returns the converted value.
+
++Placeholder can be:
+
++
+
++* `%s` - Converts a correnspinding argument into a string representation.
+
++* `%d` - Converts a correnspinding argument into a number representation (both integer and floating point).
+
++* `%j` - Converts a correnspinding argument into a JSON representation.
+
++* `%%` - Converts a correnspinding argument into a single percent sign (`'%'`) for escaping % in placeholder
+
++
+// 記載の内容を再現する例がわかりませんでした。
++If the placeholder does not correspond to an available argument, then it is
+
++given an `undefined`.
++
+
++If there are more arguments than placeholders, the extra arguments are
+
++converted into strings by `util.inspect()` and these strings are concatenated,
+
++delimited by a space.
+
++
+
++If the first argument is not a string then `util.format()` returns a string that is
+
++concatenated all the arguments with a space-delimited line. `util.inspect()` is used
+
++on each argument.
+
++
+
++
 
 
 ### util.debug(string)
