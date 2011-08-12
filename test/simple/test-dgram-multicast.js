@@ -70,41 +70,45 @@ var listener_count = 0;
 function mkListener() {
   var receivedMessages = [];
   var listenSocket = dgram.createSocket('udp4');
-  listenSocket.addMembership(LOCAL_BROADCAST_HOST);
+  listenSocket.addMembership(LOCAL_BROADCAST_HOST, function(err) {
+    assert.ok(!err);
 
-  listenSocket.on('message', function(buf, rinfo) {
-    console.error('received %s from %j', util.inspect(buf.toString()), rinfo);
-    receivedMessages.push(buf);
-
-    if (receivedMessages.length == sendMessages.length) {
-      listenSocket.dropMembership(LOCAL_BROADCAST_HOST);
-      listenSocket.close();
-    }
-  });
-
-  listenSocket.on('close', function() {
-    console.error('listenSocket closed -- checking received messages');
-    var count = 0;
-    receivedMessages.forEach(function(buf) {
-      for (var i = 0; i < sendMessages.length; ++i) {
-        if (buf.toString() === sendMessages[i].toString()) {
-          count++;
-          break;
-        }
+    listenSocket.on('message', function(buf, rinfo) {
+      console.error('received %s from %j', util.inspect(buf.toString()), rinfo);
+      receivedMessages.push(buf);
+  
+      if (receivedMessages.length == sendMessages.length) {
+        listenSocket.dropMembership(LOCAL_BROADCAST_HOST, function(err) {
+          assert.ok(!err);
+          listenSocket.close();
+        });
       }
     });
-    console.error('count %d', count);
-    //assert.strictEqual(count, sendMessages.length);
+  
+    listenSocket.on('close', function() {
+      console.error('listenSocket closed -- checking received messages');
+      var count = 0;
+      receivedMessages.forEach(function(buf) {
+        for (var i = 0; i < sendMessages.length; ++i) {
+          if (buf.toString() === sendMessages[i].toString()) {
+            count++;
+            break;
+          }
+        }
+      });
+      console.error('count %d', count);
+      //assert.strictEqual(count, sendMessages.length);
+    });
+  
+    listenSocket.on('listening', function() {
+      listenSockets.push(listenSocket);
+      if (listenSockets.length == 3) {
+        sendSocket.sendNext();
+      }
+    });
+  
+    listenSocket.bind(common.PORT);
   });
-
-  listenSocket.on('listening', function() {
-    listenSockets.push(listenSocket);
-    if (listenSockets.length == 3) {
-      sendSocket.sendNext();
-    }
-  });
-
-  listenSocket.bind(common.PORT);
 }
 
 mkListener();

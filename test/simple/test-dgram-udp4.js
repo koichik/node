@@ -50,8 +50,10 @@ server.on('listening', function() {
     client.close();
     server.close();
   });
+  var sendReturned = false;
   client.send(message_to_send, 0, message_to_send.length,
-              server_port, 'localhost', function(err, bytes) {
+              server_port, '127.0.0.1', function(err, bytes) {
+        assert.ok(sendReturned);
         if (err) {
           console.log('Caught error in client send.');
           throw err;
@@ -59,6 +61,7 @@ server.on('listening', function() {
         console.log('client wrote ' + bytes + ' bytes.');
         assert.strictEqual(bytes, message_to_send.length);
       });
+  sendReturned = true;
   client.on('close',
             function() {
               if (server.fd === null) {
