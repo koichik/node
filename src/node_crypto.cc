@@ -491,8 +491,10 @@ int Connection::HandleSSLError(const char* func, int rv) {
   if (rv >= 0) return rv;
 
   int err = SSL_get_error(ssl_, rv);
+  if (err == SSL_ERROR_NONE) {
+    return 0;
 
-  if (err == SSL_ERROR_WANT_WRITE) {
+  } else if (err == SSL_ERROR_WANT_WRITE) {
     DEBUG_PRINT("[%p] SSL: %s want write\n", ssl_, func);
     return 0;
 
@@ -502,7 +504,12 @@ int Connection::HandleSSLError(const char* func, int rv) {
 
   } else {
     static char ssl_error_buf[512];
-    ERR_error_string_n(err, ssl_error_buf, sizeof(ssl_error_buf));
+#ifdef HAVE_ERR_PEEK_LAST_ERROR
+    ERR_error_string_n(ERR_peek_last_error(), ssl_error_buf,
+            sizeof(ssl_error_buf));
+#else
+    ERR_error_string_n(ERR_peek_error(), ssl_error_buf, sizeof(ssl_error_buf));
+#endif
 
     HandleScope scope;
     Local<Value> e = Exception::Error(String::New(ssl_error_buf));
@@ -647,7 +654,12 @@ Handle<Value> Connection::New(const Arguments& args) {
       // Note reject_unauthorized ignored.
       verify_mode = SSL_VERIFY_NONE;
     } else {
-      bool reject_unauthorized = args[3]->BooleanValue();
+      String::Utf8Value sessionIdCtx(args[3]->ToString());
+      SSL_CTX_set_session_id_context(sc->ctx_,
+                                     (const unsigned char*) *sessionIdCtx,
+                                     sessionIdCtx.length());
+
+      bool reject_unauthorized = args[4]->BooleanValue();
       verify_mode = SSL_VERIFY_PEER;
       if (reject_unauthorized) verify_mode |= SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
     }
