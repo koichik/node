@@ -28,7 +28,7 @@ if ('linux darwin freebsd'.indexOf(process.platform) === -1) {
 }
 
 var assert = require('assert');
-var exec = require('child_process').exec;
+var exec = require('exec');
 
 var title = "testTestTESTtest123123123123123123HiHaiJo";
 
@@ -36,7 +36,7 @@ assert.notEqual(process.title, title);
 process.title = title;
 assert.equal(process.title, title);
 
-exec('ps -p ' + process.pid + ' -o args=', function(error, stdout, stderr) {
+exec.shell('ps -p ' + process.pid + ' -o args=', function(error, stdout, stderr) {
   assert.equal(error, null);
   assert.equal(stderr, '');
   // omitting trailing whitespace and \n

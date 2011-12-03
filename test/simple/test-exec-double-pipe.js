@@ -23,7 +23,7 @@ var is_windows = process.platform === 'win32';
 
 var assert = require('assert'),
     util = require('util'),
-    spawn = require('child_process').spawn;
+    spawn = require('exec').spawn;
 
 // We're trying to reproduce:
 // $ echo "hello\nnode\nand\nworld" | grep o | sed s/o/a/

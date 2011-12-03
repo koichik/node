@@ -26,7 +26,7 @@
 
 var common = require('../common');
 var assert = require('assert');
-var ch = require('child_process');
+var exec = require('exec');
 
 var gen = +(process.argv[2] || 0);
 var maxGen = 5;
@@ -37,7 +37,7 @@ if (gen === maxGen) {
   return;
 }
 
-var child = ch.spawn(process.execPath, [__filename, gen + 1], {
+var child = exec.spawn(process.execPath, [__filename, gen + 1], {
   customFds: [0, -1, 2]
 });
 assert.ok(!child.stdin);

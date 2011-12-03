@@ -21,7 +21,7 @@
 
 var path = require('path');
 var assert = require('assert')
-var spawn = require('child_process').spawn;
+var spawn = require('exec').spawn;
 var common = require('../common');
 
 var child = spawn(process.argv[0], [path.join(common.fixturesDir, 'GH-1899-output.js')]);

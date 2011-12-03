@@ -25,7 +25,7 @@
 var common = require('../common');
 var assert = require('assert');
 
-var exec = require('child_process').exec;
+var exec = require('exec');
 var join = require('path').join;
 
 var nodePath = process.argv[0];
@@ -35,7 +35,7 @@ var cmd = '"' + nodePath + '" "' + script + '" | head -2';
 
 var finished = false;
 
-exec(cmd, function(err, stdout, stderr) {
+exec.shell(cmd, function(err, stdout, stderr) {
   if (err) throw err;
   var lines = stdout.split('\n');
   assert.equal(3, lines.length);

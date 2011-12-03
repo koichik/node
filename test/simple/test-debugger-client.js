@@ -26,7 +26,7 @@ var common = require('../common');
 var assert = require('assert');
 var debug = require('_debugger');
 
-var spawn = require('child_process').spawn;
+var spawn = require('exec').spawn;
 
 
 var resCount = 0;

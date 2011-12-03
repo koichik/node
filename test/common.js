@@ -63,7 +63,7 @@ exports.ddCommand = function(filename, kilobytes) {
 
 
 exports.spawnPwd = function(options) {
-  var spawn = require('child_process').spawn;
+  var spawn = require('exec').spawn;
 
   if (process.platform == 'win32') {
     return spawn('cmd.exe', ['/c', 'cd'], options);

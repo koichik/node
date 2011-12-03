@@ -24,53 +24,47 @@
 
 var common = require('../common');
 var assert = require('assert');
-var exec = require('exec');
-var path = require('path');
 
-var exits = 0;
+var spawn = require('exec').spawn;
 
-function errExec(script, callback) {
-  var cmd = '"' + process.argv[0] + '" "' +
-      path.join(common.fixturesDir, script) + '"';
-  return exec.shell(cmd, function(err, stdout, stderr) {
-    // There was some error
-    assert.ok(err);
+var is_windows = process.platform === 'win32';
 
-    // More than one line of error output.
-    assert.ok(stderr.split('\n').length > 2);
+var exitCode;
+var termSignal;
+var gotStdoutEOF = false;
+var gotStderrEOF = false;
 
-    // Assert the script is mentioned in error output.
-    assert.ok(stderr.indexOf(script) >= 0);
-
-    // Proxy the args for more tests.
-    callback(err, stdout, stderr);
-
-    // Count the tests
-    exits++;
-
-    console.log('.');
-  });
-}
+var cat = spawn(is_windows ? 'cmd' : 'cat');
 
 
-// Simple throw error
-errExec('throws_error.js', function(err, stdout, stderr) {
-  assert.ok(/blah/.test(stderr));
+cat.stdout.on('data', function(chunk) {
+  assert.ok(false);
 });
 
-
-// Trying to JSON.parse(undefined)
-errExec('throws_error2.js', function(err, stdout, stderr) {
-  assert.ok(/SyntaxError/.test(stderr));
+cat.stdout.on('end', function() {
+  gotStdoutEOF = true;
 });
 
-
-// Trying to JSON.parse(undefined) in nextTick
-errExec('throws_error3.js', function(err, stdout, stderr) {
-  assert.ok(/SyntaxError/.test(stderr));
+cat.stderr.on('data', function(chunk) {
+  assert.ok(false);
 });
 
+cat.stderr.on('end', function() {
+  gotStderrEOF = true;
+});
+
+cat.on('exit', function(code, signal) {
+  exitCode = code;
+  termSignal = signal;
+});
+
+assert.equal(cat.killed, false);
+cat.kill();
+assert.equal(cat.killed, true);
 
 process.on('exit', function() {
-  assert.equal(3, exits);
+  assert.strictEqual(exitCode, null);
+  assert.strictEqual(termSignal, 'SIGTERM');
+  assert.ok(gotStdoutEOF);
+  assert.ok(gotStderrEOF);
 });

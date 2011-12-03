@@ -26,7 +26,7 @@ var common = require('../common');
 var assert = require('assert');
 
 var childKilled = false, done = false,
-    spawn = require('child_process').spawn,
+    spawn = require('exec').spawn,
     util = require('util'),
     child;
 

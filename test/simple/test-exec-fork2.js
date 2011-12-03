@@ -19,22 +19,58 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var common = require('../common');
 var assert = require('assert');
-var ch = require('child_process');
+var common = require('../common');
+var fork = require('exec').fork;
+var net = require('net');
 
-var SIZE = 100000;
-var childGone = false;
+var socketCloses = 0;
+var N = 10;
 
-var cp = ch.spawn('python', ['-c', 'print ' + SIZE + ' * "C"'], {
-  customFds: [0, 1, 2]
+var n = fork(common.fixturesDir + '/fork2.js');
+
+var messageCount = 0;
+
+var server = new net.Server(function(c) {
+  console.log('PARENT got connection');
+  c.destroy();
 });
 
-cp.on('exit', function(code) {
-  childGone = true;
-  assert.equal(0, code);
+// TODO need better API for this.
+server._backlog = 9;
+
+server.listen(common.PORT, function() {
+  console.log('PARENT send child server handle');
+  n.send({ hello: 'world' }, server._handle);
+});
+
+function makeConnections() {
+  for (var i = 0; i < N; i++) {
+    var socket = net.connect(common.PORT, function() {
+      console.log("CLIENT connected");
+    });
+
+    socket.on("close", function() {
+      socketCloses++;
+      console.log("CLIENT closed " + socketCloses);
+      if (socketCloses == N) {
+        n.kill();
+        server.close();
+      }
+    });
+  }
+}
+
+n.on('message', function(m) {
+  console.log('PARENT got message:', m);
+  if (m.gotHandle) {
+    makeConnections();
+  }
+  messageCount++;
 });
 
 process.on('exit', function() {
-  assert.ok(childGone);
+  assert.equal(10, socketCloses);
+  assert.ok(messageCount > 1);
 });
+

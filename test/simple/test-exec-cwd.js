@@ -21,36 +21,58 @@
 
 var common = require('../common');
 var assert = require('assert');
+var spawn = require('exec').spawn;
+var path = require('path');
 
-var spawn = require('child_process').spawn;
+var returns = 0;
 
-var pwd_called = false;
+/*
+  Spawns 'pwd' with given options, then test
+  - whether the exit code equals forCode,
+  - optionally whether the stdout result matches forData
+    (after removing traling whitespace)
+*/
+function testCwd(options, forCode, forData) {
+  var data = '';
 
-function pwd(callback) {
-  var output = '';
-  var child = common.spawnPwd();
+  var child = common.spawnPwd(options);
 
   child.stdout.setEncoding('utf8');
-  child.stdout.on('data', function(s) {
-    console.log('stdout: ' + JSON.stringify(s));
-    output += s;
+
+  child.stdout.on('data', function(chunk) {
+    data += chunk;
   });
 
-  child.on('exit', function(c) {
-    console.log('exit: ' + c);
-    assert.equal(0, c);
-    callback(output);
-    pwd_called = true;
+  child.on('exit', function(code, signal) {
+    forData && assert.strictEqual(forData, data.replace(/[\s\r\n]+$/, ''));
+    assert.strictEqual(forCode, code);
+    returns--;
   });
+
+  returns++;
 }
 
+// Assume these exist, and 'pwd' gives us the right directory back
+if (process.platform == 'win32') {
+  testCwd({cwd: process.env.windir}, 0, process.env.windir);
+  testCwd({cwd: 'c:\\'}, 0, 'c:\\');
+} else {
+  testCwd({cwd: '/dev'}, 0, '/dev');
+  testCwd({cwd: '/'}, 0, '/');
+}
 
-pwd(function(result) {
-  console.dir(result);
-  assert.equal(true, result.length > 1);
-  assert.equal('\n', result[result.length - 1]);
-});
+// Assume this doesn't exist, we expect exitcode=127
+testCwd({cwd: 'does-not-exist'}, 127);
 
+// Spawn() shouldn't try to chdir() so this should just work
+testCwd(undefined, 0);
+testCwd({}, 0);
+testCwd({cwd: ''}, 0);
+testCwd({cwd: undefined}, 0);
+testCwd({cwd: null}, 0);
+
+// Check whether all tests actually returned
+assert.notEqual(0, returns);
 process.on('exit', function() {
-  assert.equal(true, pwd_called);
+  assert.equal(0, returns);
 });

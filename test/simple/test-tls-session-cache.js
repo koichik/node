@@ -23,7 +23,7 @@ if (!process.versions.openssl) {
   console.error("Skipping because node compiled without OpenSSL.");
   process.exit(0);
 }
-require('child_process').exec('openssl version', function(err) {
+require('exec').shell('openssl version', function(err) {
   if (err !== null) {
     console.error("Skipping because openssl command is not available.");
     process.exit(0);
@@ -37,7 +37,7 @@ function doTest() {
   var tls = require('tls');
   var fs = require('fs');
   var join = require('path').join;
-  var spawn = require('child_process').spawn;
+  var spawn = require('exec').spawn;
 
   var keyFile = join(common.fixturesDir, 'agent.key');
   var certFile = join(common.fixturesDir, 'agent.crt');

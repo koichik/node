@@ -19,58 +19,38 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-
-
-
-var common = require('../common');
+require('../common');
 var assert = require('assert');
 var exec = require('exec');
-var path = require('path');
 
-var exits = 0;
+var success_count = 0;
+var error_count = 0;
 
-function errExec(script, callback) {
-  var cmd = '"' + process.argv[0] + '" "' +
-      path.join(common.fixturesDir, script) + '"';
-  return exec.shell(cmd, function(err, stdout, stderr) {
-    // There was some error
-    assert.ok(err);
+var pwdcommand, dir;
 
-    // More than one line of error output.
-    assert.ok(stderr.split('\n').length > 2);
-
-    // Assert the script is mentioned in error output.
-    assert.ok(stderr.indexOf(script) >= 0);
-
-    // Proxy the args for more tests.
-    callback(err, stdout, stderr);
-
-    // Count the tests
-    exits++;
-
-    console.log('.');
-  });
+if (process.platform == 'win32') {
+  pwdcommand = 'echo %cd%';
+  dir = 'c:\\windows';
+} else {
+  pwdcommand = 'pwd';
+  dir = '/dev';
 }
 
-
-// Simple throw error
-errExec('throws_error.js', function(err, stdout, stderr) {
-  assert.ok(/blah/.test(stderr));
+var child = exec.shell(pwdcommand, {cwd: dir}, function(err, stdout, stderr) {
+  if (err) {
+    error_count++;
+    console.log('error!: ' + err.code);
+    console.log('stdout: ' + JSON.stringify(stdout));
+    console.log('stderr: ' + JSON.stringify(stderr));
+    assert.equal(false, err.killed);
+  } else {
+    success_count++;
+    console.log(stdout);
+    assert.ok(stdout.indexOf(dir) == 0);
+  }
 });
-
-
-// Trying to JSON.parse(undefined)
-errExec('throws_error2.js', function(err, stdout, stderr) {
-  assert.ok(/SyntaxError/.test(stderr));
-});
-
-
-// Trying to JSON.parse(undefined) in nextTick
-errExec('throws_error3.js', function(err, stdout, stderr) {
-  assert.ok(/SyntaxError/.test(stderr));
-});
-
 
 process.on('exit', function() {
-  assert.equal(3, exits);
+  assert.equal(1, success_count);
+  assert.equal(0, error_count);
 });

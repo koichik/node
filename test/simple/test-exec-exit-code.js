@@ -21,63 +21,33 @@
 
 var common = require('../common');
 var assert = require('assert');
+var spawn = require('exec').spawn;
+var path = require('path');
 
-var spawn = require('child_process').spawn;
-var is_windows = process.platform === 'win32';
+var exits = 0;
 
-var cat = spawn(is_windows ? 'more' : 'cat');
-cat.stdin.write('hello');
-cat.stdin.write(' ');
-cat.stdin.write('world');
+var exitScript = path.join(common.fixturesDir, 'exit.js');
+var exitChild = spawn(process.argv[0], [exitScript, 23]);
+exitChild.on('exit', function(code, signal) {
+  assert.strictEqual(code, 23);
+  assert.strictEqual(signal, null);
 
-assert.ok(cat.stdin.writable);
-assert.ok(!cat.stdin.readable);
-
-cat.stdin.end();
-
-var response = '';
-var exitStatus = -1;
-
-var gotStdoutEOF = false;
-
-cat.stdout.setEncoding('utf8');
-cat.stdout.on('data', function(chunk) {
-  console.log('stdout: ' + chunk);
-  response += chunk;
-});
-
-cat.stdout.on('end', function() {
-  gotStdoutEOF = true;
+  exits++;
 });
 
 
-var gotStderrEOF = false;
 
-cat.stderr.on('data', function(chunk) {
-  // shouldn't get any stderr output
-  assert.ok(false);
+var errorScript = path.join(common.fixturesDir,
+                            'exec_should_emit_error.js');
+var errorChild = spawn(process.argv[0], [errorScript]);
+errorChild.on('exit', function(code, signal) {
+  assert.ok(code !== 0);
+  assert.strictEqual(signal, null);
+
+  exits++;
 });
 
-cat.stderr.on('end', function(chunk) {
-  gotStderrEOF = true;
-});
-
-
-cat.on('exit', function(status) {
-  console.log('exit event');
-  exitStatus = status;
-  if (is_windows) {
-    assert.equal('hello world\r\n', response);
-  } else {
-    assert.equal('hello world', response);
-  }
-});
 
 process.on('exit', function() {
-  assert.equal(0, exitStatus);
-  if (is_windows) {
-    assert.equal('hello world\r\n', response);
-  } else {
-    assert.equal('hello world', response);
-  }
+  assert.equal(2, exits);
 });

@@ -21,7 +21,7 @@
 
 var common = require('../common');
 var assert = require('assert');
-var exec = require('child_process').exec;
+var exec = require('exec');
 var tls = require('tls');
 var fs = require('fs');
 
@@ -53,7 +53,7 @@ var server = tls.createServer(options, function(conn) {
 server.listen(common.PORT, '127.0.0.1', function() {
   var cmd = 'openssl s_client -cipher NULL-MD5 -connect 127.0.0.1:' + common.PORT;
 
-  exec(cmd, function(err, stdout, stderr) {
+  exec.shell(cmd, function(err, stdout, stderr) {
     if (err) throw err;
     response = stdout;
     server.close();

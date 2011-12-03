@@ -8,7 +8,7 @@ var testFD = fs.openSync(testFileName, 'w');
 console.error(testFileName + '\n');
 
 
-var tailProc = require('child_process').spawn('tail', ['-f', testFileName]);
+var tailProc = require('exec').spawn('tail', ['-f', testFileName]);
 tailProc.stdout.on('data', tailCB);
 
 function tailCB(data) {

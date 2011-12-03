@@ -107,7 +107,7 @@ var common = require('../common');
 var assert = require('assert');
 var fs = require('fs');
 var tls = require('tls');
-var spawn = require('child_process').spawn;
+var spawn = require('exec').spawn;
 
 
 function filenamePEM(n) {

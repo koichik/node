@@ -24,39 +24,29 @@
 
 var common = require('../common');
 var assert = require('assert');
-var exec = require('child_process').exec;
-var success_count = 0;
-var error_count = 0;
-var response = '';
-var child;
+var path = require('path');
+var spawn = require('exec').spawn;
+var sub = path.join(common.fixturesDir, 'print-chars.js');
 
-function after(err, stdout, stderr) {
-  if (err) {
-    error_count++;
-    console.log('error!: ' + err.code);
-    console.log('stdout: ' + JSON.stringify(stdout));
-    console.log('stderr: ' + JSON.stringify(stderr));
-    assert.equal(false, err.killed);
-  } else {
-    success_count++;
-    assert.equal(true, stdout != '');
-  }
-}
+var n = 500000;
 
-if (process.platform !== 'win32') {
-  child = exec('/usr/bin/env', { env: { 'HELLO': 'WORLD' } }, after);
-} else {
-  child = exec('set', { env: { 'HELLO': 'WORLD' } }, after);
-}
+var child = spawn(process.argv[0], [sub, n]);
 
-child.stdout.setEncoding('utf8');
-child.stdout.on('data', function(chunk) {
-  response += chunk;
+var count = 0;
+
+child.stderr.setEncoding('utf8');
+child.stderr.on('data', function(data) {
+  console.log('parent stderr: ' + data);
+  assert.ok(false);
 });
 
-process.on('exit', function() {
-  console.log('response: ', response);
-  assert.equal(1, success_count);
-  assert.equal(0, error_count);
-  assert.ok(response.indexOf('HELLO=WORLD') >= 0);
+child.stderr.setEncoding('utf8');
+child.stdout.on('data', function(data) {
+  count += data.length;
+  console.log(count);
+});
+
+child.on('exit', function(data) {
+  assert.equal(n, count);
+  console.log('okay');
 });

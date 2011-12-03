@@ -19,46 +19,45 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-
-
-
 var common = require('../common');
 var assert = require('assert');
 
-var spawn = require('child_process').spawn;
+var spawn = require('exec').spawn;
 
-var is_windows = process.platform === 'win32';
+var path = require('path');
 
-var SIZE = 1000 * 1024;
-var N = 40;
-var finished = false;
+var sub = path.join(common.fixturesDir, 'echo.js');
 
-function doSpawn(i) {
-  var child = spawn('python', ['-c', 'print ' + SIZE + ' * "C"']);
-  var count = 0;
+var gotHelloWorld = false;
+var gotEcho = false;
 
-  child.stdout.setEncoding('ascii');
-  child.stdout.on('data', function(chunk) {
-    count += chunk.length;
-  });
+var child = spawn(process.argv[0], [sub]);
 
-  child.stderr.on('data', function(chunk) {
-    console.log('stderr: ' + chunk);
-  });
+child.stderr.on('data', function(data) {
+  console.log('parent stderr: ' + data);
+});
 
-  child.on('exit', function() {
-    // + 1 for \n or + 2 for \r\n on Windows
-    assert.equal(SIZE + (is_windows ? 2 : 1), count);
-    if (i < N) {
-      doSpawn(i + 1);
-    } else {
-      finished = true;
-    }
-  });
-}
+child.stdout.setEncoding('utf8');
 
-doSpawn(0);
+child.stdout.on('data', function(data) {
+  console.log('child said: ' + JSON.stringify(data));
+  if (!gotHelloWorld) {
+    assert.equal('hello world\r\n', data);
+    gotHelloWorld = true;
+    child.stdin.write('echo me\r\n');
+  } else {
+    assert.equal('echo me\r\n', data);
+    gotEcho = true;
+    child.stdin.end();
+  }
+});
+
+child.stdout.on('end', function(data) {
+  console.log('child end');
+});
+
 
 process.on('exit', function() {
-  assert.ok(finished);
+  assert.ok(gotHelloWorld);
+  assert.ok(gotEcho);
 });

@@ -1,6 +1,6 @@
 var path = require("path");
 var util = require("util");
-var childProcess = require("child_process");
+var spawn = require("exec").spawn;
 var benchmarks = [ "timers.js"
                  , "process_loop.js"
                  , "static_http_server.js"
@@ -10,7 +10,7 @@ var benchmarkDir = path.dirname(__filename);
 
 function exec (script, callback) {
   var start = new Date();
-  var child = childProcess.spawn(process.argv[0], [path.join(benchmarkDir, script)]);
+  var child = spawn(process.argv[0], [path.join(benchmarkDir, script)]);
   child.addListener("exit", function (code) {
     var elapsed = new Date() - start;
     callback(elapsed, code);

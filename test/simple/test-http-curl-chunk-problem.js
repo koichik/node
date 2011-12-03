@@ -28,7 +28,7 @@ if (!process.versions.openssl) {
 var common = require('../common');
 var assert = require('assert');
 var http = require('http');
-var cp = require('child_process');
+var exec = require('exec');
 var fs = require('fs');
 
 var filename = require('path').join(common.tmpDir || '/tmp', 'big');
@@ -45,7 +45,7 @@ function maybeMakeRequest() {
   if (++count < 2) return;
   console.log('making curl request');
   var cmd = 'curl http://127.0.0.1:' + common.PORT + '/ | openssl sha1';
-  cp.exec(cmd, function(err, stdout, stderr) {
+  exec.shell(cmd, function(err, stdout, stderr) {
     if (err) throw err;
     var hex = stdout.match(/([A-Fa-f0-9]{40})/)[0];
     assert.equal('8c206a1a87599f532ce68675536f0b1546900d7a', hex);
@@ -58,7 +58,7 @@ function maybeMakeRequest() {
 var ddcmd = common.ddCommand(filename, 10240);
 console.log('dd command: ', ddcmd);
 
-cp.exec(ddcmd, function(err, stdout, stderr) {
+exec.shell(ddcmd, function(err, stdout, stderr) {
   if (err) throw err;
   maybeMakeRequest();
 });
@@ -68,7 +68,7 @@ var server = http.createServer(function(req, res) {
   res.writeHead(200);
 
   // Create the subprocess
-  var cat = cp.spawn('cat', [filename]);
+  var cat = exec.spawn('cat', [filename]);
 
   // Stream the data through to the response as binary chunks
   cat.stdout.on('data', function(data) {

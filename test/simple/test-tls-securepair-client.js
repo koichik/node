@@ -39,7 +39,7 @@ var assert = require('assert');
 var fs = require('fs');
 var crypto = require('crypto');
 var tls = require('tls');
-var spawn = require('child_process').spawn;
+var spawn = require('exec').spawn;
 
 // FIXME: Avoid the common PORT as this test currently hits a C-level
 // assertion error with node_g. The program aborts without HUPing

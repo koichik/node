@@ -25,7 +25,7 @@
 var common = require('../common');
 var assert = require('assert');
 var join = require('path').join;
-var childProccess = require('child_process');
+var exec = require('exec');
 var fs = require('fs');
 
 var stdoutScript = join(common.fixturesDir, 'echo.js');
@@ -55,7 +55,7 @@ try {
 
 fs.writeFileSync(tmpFile, string);
 
-childProccess.exec(cmd, function(err, stdout, stderr) {
+exec.shell(cmd, function(err, stdout, stderr) {
   fs.unlinkSync(tmpFile);
 
   if (err) throw err;

@@ -1,4 +1,10 @@
-## Child Processes
+## Exec
+
+You can access this module with:
+
+    var exec = require('exec');
+
+### exec.ChildProcess
 
 Node provides a tri-directional `popen(3)` facility through the `ChildProcess`
 class.
@@ -6,14 +12,14 @@ class.
 It is possible to stream data through the child's `stdin`, `stdout`, and
 `stderr` in a fully non-blocking way.
 
-To create a child process use `require('child_process').spawn()`.
+To create a child process use `require('exec').spawn()`.
 
 Child processes always have three streams associated with them. `child.stdin`,
 `child.stdout`, and `child.stderr`.
 
 `ChildProcess` is an `EventEmitter`.
 
-### Event:  'exit'
+#### Event:  'exit'
 
 `function (code, signal) {}`
 
@@ -24,36 +30,60 @@ of the signal, otherwise `null`.
 
 See `waitpid(2)`.
 
-### child.stdin
+#### child.stdin
 
 A `Writable Stream` that represents the child process's `stdin`.
 Closing this stream via `end()` often causes the child process to terminate.
 
-### child.stdout
+#### child.stdout
 
 A `Readable Stream` that represents the child process's `stdout`.
 
-### child.stderr
+#### child.stderr
 
 A `Readable Stream` that represents the child process's `stderr`.
 
-### child.pid
+#### child.pid
 
 The PID of the child process.
 
 Example:
 
-    var spawn = require('child_process').spawn,
+    var spawn = require('exec').spawn,
         grep  = spawn('grep', ['ssh']);
 
     console.log('Spawned child pid: ' + grep.pid);
     grep.stdin.end();
 
 
-### child_process.spawn(command, args=[], [options])
+#### child.kill(signal='SIGTERM')
 
-Launches a new process with the given `command`, with  command line arguments in `args`.
-If omitted, `args` defaults to an empty Array.
+Send a signal to the child process. If no argument is given, the process will
+be sent `'SIGTERM'`. See `signal(7)` for a list of available signals.
+
+    var spawn = require('exec').spawn,
+        grep  = spawn('grep', ['ssh']);
+
+    grep.on('exit', function (code, signal) {
+      console.log('child process terminated due to receipt of signal '+signal);
+    });
+
+    // send SIGHUP to process
+    grep.kill('SIGHUP');
+
+Note that while the function is called `kill`, the signal delivered to the child
+process may not actually kill it.  `kill` really just sends a signal to a
+process.
+
+See `kill(2)`
+
+
+---
+
+### exec.spawn(command, args=[], [options])
+
+Launches a new process with the given `command`, with  command line arguments
+in `args`. If omitted, `args` defaults to an empty Array.
 
 The third argument is used to specify additional options, which defaults to:
 
@@ -62,15 +92,17 @@ The third argument is used to specify additional options, which defaults to:
       setsid: false
     }
 
-`cwd` allows you to specify the working directory from which the process is spawned.
-Use `env` to specify environment variables that will be visible to the new process.
+`cwd` allows you to specify the working directory from which the process is
+spawned. Use `env` to specify environment variables that will be visible to
+the new process.
 
 `setsid`, if set true, will cause the subprocess to be run in a new session.
 
-Example of running `ls -lh /usr`, capturing `stdout`, `stderr`, and the exit code:
+Example of running `ls -lh /usr`, capturing `stdout`, `stderr`, and the exit
+code:
 
     var util  = require('util'),
-        spawn = require('child_process').spawn,
+        spawn = require('exec').spawn,
         ls    = spawn('ls', ['-lh', '/usr']);
 
     ls.stdout.on('data', function (data) {
@@ -89,7 +121,7 @@ Example of running `ls -lh /usr`, capturing `stdout`, `stderr`, and the exit cod
 Example: A very elaborate way to run 'ps ax | grep ssh'
 
     var util  = require('util'),
-        spawn = require('child_process').spawn,
+        spawn = require('exec').spawn,
         ps    = spawn('ps', ['ax']),
         grep  = spawn('grep', ['ssh']);
 
@@ -125,7 +157,7 @@ Example: A very elaborate way to run 'ps ax | grep ssh'
 
 Example of checking for failed exec:
 
-    var spawn = require('child_process').spawn,
+    var spawn = require('exec').spawn,
         child = spawn('bad_command');
 
     child.stderr.setEncoding('utf8');
@@ -151,17 +183,17 @@ There are several internal options. In particular `stdinStream`,
 `stdoutStream`, `stderrStream`. They are for INTERNAL USE ONLY. As with all
 undocumented APIs in Node, they should not be used.
 
-See also: `child_process.exec()`
+See also: `exec.shell()`
 
-### child_process.exec(command, [options], callback)
+### exec.shell(command, [options], callback)
 
 Runs a command in a shell and buffers the output.
 
     var util = require('util'),
-        exec = require('child_process').exec,
+        shell = require('exec').shell,
         child;
 
-    child = exec('cat *.js bad_file | wc -l',
+    child = shell('cat *.js bad_file | wc -l',
       function (error, stdout, stderr) {
         console.log('stdout: ' + stdout);
         console.log('stderr: ' + stderr);
@@ -175,7 +207,8 @@ will be `null`.  On error, `error` will be an instance of `Error` and `err.code`
 will be the exit code of the child process, and `err.signal` will be set to the
 signal that terminated the process.
 
-There is a second optional argument to specify several options. The default options are
+There is a second optional argument to specify several options. The default
+options are
 
     { encoding: 'utf8',
       timeout: 0,
@@ -191,14 +224,14 @@ amount of data allowed on stdout or stderr - if this value is exceeded then
 the child process is killed.
 
 
-### child_process.execFile(file, args, options, callback)
+### exec.file(file, args, options, callback)
 
-This is similar to `child_process.exec()` except it does not execute a
+This is similar to `exec.shell()` except it does not execute a
 subshell but rather the specified file directly. This makes it slightly
-leaner than `child_process.exec`. It has the same options.
+leaner than `exec.shell`. It has the same options.
 
 
-### child_process.fork(modulePath, arguments, options)
+### exec.fork(modulePath, arguments, options)
 
 This is a special case of the `spawn()` functionality for spawning Node
 processes. In addition to having all the methods in a normal ChildProcess
@@ -208,9 +241,9 @@ are received by a `'message'` event on the child.
 
 For example:
 
-    var cp = require('child_process');
+    var exec = require('exec');
 
-    var n = cp.fork(__dirname + '/sub.js');
+    var n = exec.fork(__dirname + '/sub.js');
 
     n.on('message', function(m) {
       console.log('PARENT got message:', m);
@@ -241,7 +274,7 @@ another process. Child will receive the handle as as second argument to the
 `message` event. Here is an example of sending a handle:
 
     var server = require('net').createServer();
-    var child = require('child_process').fork(__dirname + '/child.js');
+    var child = require('exec').fork(__dirname + '/child.js');
     // Open up the server object and send the handle.
     server.listen(1337, function() {
       child.send({ server: true }, server._handle);
@@ -256,25 +289,3 @@ processes:
         server.listen(serverHandle);
       }
     });
-
-
-
-### child.kill(signal='SIGTERM')
-
-Send a signal to the child process. If no argument is given, the process will
-be sent `'SIGTERM'`. See `signal(7)` for a list of available signals.
-
-    var spawn = require('child_process').spawn,
-        grep  = spawn('grep', ['ssh']);
-
-    grep.on('exit', function (code, signal) {
-      console.log('child process terminated due to receipt of signal '+signal);
-    });
-
-    // send SIGHUP to process
-    grep.kill('SIGHUP');
-
-Note that while the function is called `kill`, the signal delivered to the child
-process may not actually kill it.  `kill` really just sends a signal to a process.
-
-See `kill(2)`

@@ -23,7 +23,7 @@
 process.env.TZ = 'Europe/Amsterdam';
 
 assert = require('assert');
-spawn = require('child_process').spawn;
+spawn = require('exec').spawn;
 
 /* For the moment we are not going to support setting the timezone via the
  * environment variables. The problem is that various V8 platform backends

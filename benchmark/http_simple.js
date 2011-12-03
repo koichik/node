@@ -1,5 +1,4 @@
 path = require("path");
-exec = require("child_process").exec;
 http = require("http");
 
 port = parseInt(process.env.PORT || 8000);

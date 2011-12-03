@@ -19,60 +19,46 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+
+
+
 var common = require('../common');
 var assert = require('assert');
-var spawn = require('child_process').spawn;
-var path = require('path');
 
-var returns = 0;
+var spawn = require('exec').spawn;
 
-/*
-  Spawns 'pwd' with given options, then test
-  - whether the exit code equals forCode,
-  - optionally whether the stdout result matches forData
-    (after removing traling whitespace)
-*/
-function testCwd(options, forCode, forData) {
-  var data = '';
+var is_windows = process.platform === 'win32';
 
-  var child = common.spawnPwd(options);
+var SIZE = 1000 * 1024;
+var N = 40;
+var finished = false;
 
-  child.stdout.setEncoding('utf8');
+function doSpawn(i) {
+  var child = spawn('python', ['-c', 'print ' + SIZE + ' * "C"']);
+  var count = 0;
 
+  child.stdout.setEncoding('ascii');
   child.stdout.on('data', function(chunk) {
-    data += chunk;
+    count += chunk.length;
   });
 
-  child.on('exit', function(code, signal) {
-    forData && assert.strictEqual(forData, data.replace(/[\s\r\n]+$/, ''));
-    assert.strictEqual(forCode, code);
-    returns--;
+  child.stderr.on('data', function(chunk) {
+    console.log('stderr: ' + chunk);
   });
 
-  returns++;
+  child.on('exit', function() {
+    // + 1 for \n or + 2 for \r\n on Windows
+    assert.equal(SIZE + (is_windows ? 2 : 1), count);
+    if (i < N) {
+      doSpawn(i + 1);
+    } else {
+      finished = true;
+    }
+  });
 }
 
-// Assume these exist, and 'pwd' gives us the right directory back
-if (process.platform == 'win32') {
-  testCwd({cwd: process.env.windir}, 0, process.env.windir);
-  testCwd({cwd: 'c:\\'}, 0, 'c:\\');
-} else {
-  testCwd({cwd: '/dev'}, 0, '/dev');
-  testCwd({cwd: '/'}, 0, '/');
-}
+doSpawn(0);
 
-// Assume this doesn't exist, we expect exitcode=127
-testCwd({cwd: 'does-not-exist'}, 127);
-
-// Spawn() shouldn't try to chdir() so this should just work
-testCwd(undefined, 0);
-testCwd({}, 0);
-testCwd({cwd: ''}, 0);
-testCwd({cwd: undefined}, 0);
-testCwd({cwd: null}, 0);
-
-// Check whether all tests actually returned
-assert.notEqual(0, returns);
 process.on('exit', function() {
-  assert.equal(0, returns);
+  assert.ok(finished);
 });

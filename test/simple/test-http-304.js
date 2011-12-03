@@ -26,7 +26,7 @@ var common = require('../common');
 var assert = require('assert');
 
 var http = require('http');
-var childProcess = require('child_process');
+var exec = require('exec');
 
 var s = http.createServer(function(request, response) {
   response.writeHead(304);
@@ -34,7 +34,7 @@ var s = http.createServer(function(request, response) {
 });
 
 s.listen(common.PORT, function() {
-  childProcess.exec('curl -i http://127.0.0.1:' + common.PORT + '/',
+  exec.shell('curl -i http://127.0.0.1:' + common.PORT + '/',
                     function(err, stdout, stderr) {
                       if (err) throw err;
                       s.close();

@@ -413,14 +413,14 @@
     if (process.env.NODE_CHANNEL_FD) {
       var fd = parseInt(process.env.NODE_CHANNEL_FD);
       assert(fd >= 0);
-      var cp = NativeModule.require('child_process');
+      var exec = NativeModule.require('exec');
 
       // Load tcp_wrap to avoid situation where we might immediately receive
       // a message.
       // FIXME is this really necessary?
       process.binding('tcp_wrap')
 
-      cp._forkChild(fd);
+      exec._forkChild(fd);
       assert(process.send);
     }
   }

@@ -1,4 +1,4 @@
-var fork = require('child_process').fork;
+var fork = require('exec').fork;
 var net = require('net');
 var buffer = new Buffer(1024 * 1024);
 

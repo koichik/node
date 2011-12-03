@@ -23,6 +23,7 @@
       'lib/dgram.js',
       'lib/dns.js',
       'lib/events.js',
+      'lib/exec.js',
       'lib/freelist.js',
       'lib/fs.js',
       'lib/http.js',

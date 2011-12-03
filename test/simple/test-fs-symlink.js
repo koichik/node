@@ -23,7 +23,7 @@ var common = require('../common');
 var assert = require('assert');
 var path = require('path');
 var fs = require('fs');
-var exec = require('child_process').exec;
+var exec = require('exec');
 var completed = 0;
 var expected_tests = 2;
 
@@ -76,7 +76,7 @@ var runtest = function(skip_symlinks) {
 if (is_windows) {
   // On Windows, creating symlinks requires admin privileges.
   // We'll only try to run symlink test if we have enough privileges.
-  exec("whoami /priv", function(err, o) {
+  exec.shell("whoami /priv", function(err, o) {
     if (err || o.indexOf('SeCreateSymbolicLinkPrivilege') == -1) {
       expected_tests = 1;
       runtest(true);

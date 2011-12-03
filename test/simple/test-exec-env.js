@@ -19,52 +19,37 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-
-
-
 var common = require('../common');
 var assert = require('assert');
 
-var spawn = require('child_process').spawn;
+var spawn = require('exec').spawn;
 
-var is_windows = process.platform === 'win32';
+var isWindows = process.platform === 'win32';
 
-var exitCode;
-var termSignal;
-var gotStdoutEOF = false;
-var gotStderrEOF = false;
+var env = {
+  'HELLO': 'WORLD'
+};
+env.__proto__ = {
+  'FOO': 'BAR'
+};
 
-var cat = spawn(is_windows ? 'cmd' : 'cat');
+if (isWindows) {
+  var child = spawn('cmd.exe', ['/c', 'set'], {env: env});
+} else {
+  var child = spawn('/usr/bin/env', [], {env: env});
+}
 
 
-cat.stdout.on('data', function(chunk) {
-  assert.ok(false);
+var response = '';
+
+child.stdout.setEncoding('utf8');
+
+child.stdout.on('data', function(chunk) {
+  console.log('stdout: ' + chunk);
+  response += chunk;
 });
-
-cat.stdout.on('end', function() {
-  gotStdoutEOF = true;
-});
-
-cat.stderr.on('data', function(chunk) {
-  assert.ok(false);
-});
-
-cat.stderr.on('end', function() {
-  gotStderrEOF = true;
-});
-
-cat.on('exit', function(code, signal) {
-  exitCode = code;
-  termSignal = signal;
-});
-
-assert.equal(cat.killed, false);
-cat.kill();
-assert.equal(cat.killed, true);
 
 process.on('exit', function() {
-  assert.strictEqual(exitCode, null);
-  assert.strictEqual(termSignal, 'SIGTERM');
-  assert.ok(gotStdoutEOF);
-  assert.ok(gotStderrEOF);
+  assert.ok(response.indexOf('HELLO=WORLD') >= 0);
+  assert.ok(response.indexOf('FOO=BAR') >= 0);
 });

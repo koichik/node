@@ -19,34 +19,11 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+var exec = require('exec');
 
-
-
-var common = require('../common');
-var assert = require('assert');
-var path = require('path');
-var spawn = require('child_process').spawn;
-var sub = path.join(common.fixturesDir, 'print-chars.js');
-
-var n = 500000;
-
-var child = spawn(process.argv[0], [sub, n]);
-
-var count = 0;
-
-child.stderr.setEncoding('utf8');
-child.stderr.on('data', function(data) {
-  console.log('parent stderr: ' + data);
-  assert.ok(false);
-});
-
-child.stderr.setEncoding('utf8');
-child.stdout.on('data', function(data) {
-  count += data.length;
-  console.log(count);
-});
-
-child.on('exit', function(data) {
-  assert.equal(n, count);
-  console.log('okay');
+[0, 1].forEach(function(i) {
+  exec.shell('ls', function(err, stdout, stderr) {
+    console.log(i);
+    throw new Error('hello world');
+  });
 });

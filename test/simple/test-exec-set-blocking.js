@@ -19,11 +19,22 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var exec = require('child_process').exec;
+var common = require('../common');
+var assert = require('assert');
+var exec = require('exec');
 
-[0, 1].forEach(function(i) {
-  exec('ls', function(err, stdout, stderr) {
-    console.log(i);
-    throw new Error('hello world');
-  });
+var SIZE = 100000;
+var childGone = false;
+
+var cp = exec.spawn('python', ['-c', 'print ' + SIZE + ' * "C"'], {
+  customFds: [0, 1, 2]
+});
+
+cp.on('exit', function(code) {
+  childGone = true;
+  assert.equal(0, code);
+});
+
+process.on('exit', function() {
+  assert.ok(childGone);
 });

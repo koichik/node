@@ -21,7 +21,7 @@
 
 
 var assert = require('assert');
-var spawn = require('child_process').spawn;
+var spawn = require('exec').spawn;
 
 var cat = spawn('cat');
 var called;

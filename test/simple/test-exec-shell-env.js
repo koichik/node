@@ -19,45 +19,44 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+
+
+
 var common = require('../common');
 var assert = require('assert');
+var exec = require('exec');
+var success_count = 0;
+var error_count = 0;
+var response = '';
+var child;
 
-var spawn = require('child_process').spawn;
+function after(err, stdout, stderr) {
+  if (err) {
+    error_count++;
+    console.log('error!: ' + err.code);
+    console.log('stdout: ' + JSON.stringify(stdout));
+    console.log('stderr: ' + JSON.stringify(stderr));
+    assert.equal(false, err.killed);
+  } else {
+    success_count++;
+    assert.equal(true, stdout != '');
+  }
+}
 
-var path = require('path');
-
-var sub = path.join(common.fixturesDir, 'echo.js');
-
-var gotHelloWorld = false;
-var gotEcho = false;
-
-var child = spawn(process.argv[0], [sub]);
-
-child.stderr.on('data', function(data) {
-  console.log('parent stderr: ' + data);
-});
+if (process.platform !== 'win32') {
+  child = exec.shell('/usr/bin/env', { env: { 'HELLO': 'WORLD' } }, after);
+} else {
+  child = exec.shell('set', { env: { 'HELLO': 'WORLD' } }, after);
+}
 
 child.stdout.setEncoding('utf8');
-
-child.stdout.on('data', function(data) {
-  console.log('child said: ' + JSON.stringify(data));
-  if (!gotHelloWorld) {
-    assert.equal('hello world\r\n', data);
-    gotHelloWorld = true;
-    child.stdin.write('echo me\r\n');
-  } else {
-    assert.equal('echo me\r\n', data);
-    gotEcho = true;
-    child.stdin.end();
-  }
+child.stdout.on('data', function(chunk) {
+  response += chunk;
 });
-
-child.stdout.on('end', function(data) {
-  console.log('child end');
-});
-
 
 process.on('exit', function() {
-  assert.ok(gotHelloWorld);
-  assert.ok(gotEcho);
+  console.log('response: ', response);
+  assert.equal(1, success_count);
+  assert.equal(0, error_count);
+  assert.ok(response.indexOf('HELLO=WORLD') >= 0);
 });

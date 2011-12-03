@@ -33,7 +33,7 @@ var net = require('net');
 var fs = require('fs');
 var crypto = require('crypto');
 var tls = require('tls');
-var spawn = require('child_process').spawn;
+var spawn = require('exec').spawn;
 
 var connections = 0;
 var key = fs.readFileSync(join(common.fixturesDir, 'agent.key')).toString();

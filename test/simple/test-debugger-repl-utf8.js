@@ -22,7 +22,7 @@
 
 var common = require('../common');
 var assert = require('assert');
-var spawn = require('child_process').spawn;
+var spawn = require('exec').spawn;
 var debug = require('_debugger');
 
 var script = common.fixturesDir + '/breakpoints_utf8.js';

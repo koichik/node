@@ -24,7 +24,7 @@ var assert = require('assert');
 var fs = require('fs');
 var http = require('http');
 var path = require('path');
-var cp = require('child_process');
+var exec = require('exec');
 
 var filename = path.join(common.tmpDir || '/tmp', 'big');
 var clientReqComplete = false;
@@ -61,7 +61,7 @@ server.on('listening', function() {
   var cmd = common.ddCommand(filename, 10240);
   console.log('dd command: ', cmd);
 
-  cp.exec(cmd, function(err, stdout, stderr) {
+  exec.shell(cmd, function(err, stdout, stderr) {
     if (err) throw err;
     makeRequest();
   });

@@ -27,7 +27,7 @@
 var common = require('../common');
 var assert = require('assert');
 var cluster = require('cluster');
-var fork = require('child_process').fork;
+var fork = require('exec').fork;
 
 var isTestRunner = process.argv[2] != 'child';
 

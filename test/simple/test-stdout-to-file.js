@@ -25,7 +25,7 @@
 var common = require('../common');
 var assert = require('assert');
 var path = require('path');
-var childProccess = require('child_process');
+var exec = require('exec');
 var fs = require('fs');
 
 var scriptString = path.join(common.fixturesDir, 'print-chars.js');
@@ -47,7 +47,7 @@ function test(size, useBuffer, cb) {
 
   common.print(size + ' chars to ' + tmpFile + '...');
 
-  childProccess.exec(cmd, function(err) {
+  exec.shell(cmd, function(err) {
     if (err) throw err;
 
     console.log('done!');

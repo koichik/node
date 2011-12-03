@@ -30,7 +30,7 @@
 // the entire buffer.
 var common = require('../common');
 var assert = require('assert');
-var spawn = require('child_process').spawn;
+var spawn = require('exec').spawn;
 var https = require('https');
 var fs = require('fs');
 

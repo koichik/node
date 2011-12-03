@@ -1,10 +1,10 @@
 var util = require("util"),
-    childProcess = require("child_process");
+    exec = require("exec");
 
 function next (i) {
   if (i <= 0) return;
 
-  var child = childProcess.spawn("echo", ["hello"]);
+  var child = exec.spawn("echo", ["hello"]);
 
   child.stdout.addListener("data", function (chunk) {
     util.print(chunk);

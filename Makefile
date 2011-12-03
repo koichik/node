@@ -227,15 +227,15 @@ UVTEST += simple/test-tls-securepair-server
 #UVTEST += simple/test-tls-server-verify # broken
 UVTEST += simple/test-tls-set-encoding
 
-# child_process
-UVTEST += simple/test-child-process-exit-code
-UVTEST += simple/test-child-process-buffering
-UVTEST += simple/test-child-process-exec-cwd
-UVTEST += simple/test-child-process-cwd
-UVTEST += simple/test-child-process-env
-UVTEST += simple/test-child-process-stdin
-UVTEST += simple/test-child-process-ipc
-UVTEST += simple/test-child-process-deprecated-api
+# exec
+UVTEST += simple/test-exec-exit-code
+UVTEST += simple/test-exec-buffering
+UVTEST += simple/test-exec-exec-cwd
+UVTEST += simple/test-exec-cwd
+UVTEST += simple/test-exec-env
+UVTEST += simple/test-exec-stdin
+UVTEST += simple/test-exec-ipc
+UVTEST += simple/test-exec-deprecated-api
 
 
 test-uv: all

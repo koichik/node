@@ -1,4 +1,4 @@
-var spawn = require('child_process').spawn,
+var spawn = require('exec').spawn,
     path = require('path'),
     emptyJsFile = path.join(__dirname, '../test/fixtures/semicolon.js'),
     starts = 100,

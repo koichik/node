@@ -26,7 +26,7 @@ var common = require('../common');
 var assert = require('assert');
 // This test requires the program 'ab'
 var http = require('http');
-var exec = require('child_process').exec;
+var exec = require('exec');
 
 var bodyLength = 12345;
 
@@ -47,7 +47,7 @@ var runs = 0;
 
 function runAb(opts, callback) {
   var command = 'ab ' + opts + ' http://127.0.0.1:' + common.PORT + '/';
-  exec(command, function(err, stdout, stderr) {
+  exec.shell(command, function(err, stdout, stderr) {
     if (err) {
       if (stderr.indexOf('ab') >= 0) {
         console.log('ab not installed? skipping test.\n' + stderr);

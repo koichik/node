@@ -29,7 +29,7 @@ var assert = require('assert');
 var join = require('path').join;
 
 var fs = require('fs');
-var exec = require('child_process').exec;
+var exec = require('exec');
 
 var https = require('https');
 
@@ -66,7 +66,7 @@ server.listen(common.PORT, function() {
   cmd += ' --cert ' + join(common.fixturesDir, 'foafssl.crt');
   cmd += ' --key ' + join(common.fixturesDir, 'foafssl.key');
   console.error('executing %j', cmd);
-  exec(cmd, function(err, stdout, stderr) {
+  exec.shell(cmd, function(err, stdout, stderr) {
     if (err) throw err;
     common.error(common.inspect(stdout));
     assert.equal(body, stdout);

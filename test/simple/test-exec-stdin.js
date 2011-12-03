@@ -22,34 +22,62 @@
 var common = require('../common');
 var assert = require('assert');
 
-var spawn = require('child_process').spawn;
+var spawn = require('exec').spawn;
+var is_windows = process.platform === 'win32';
 
-var isWindows = process.platform === 'win32';
+var cat = spawn(is_windows ? 'more' : 'cat');
+cat.stdin.write('hello');
+cat.stdin.write(' ');
+cat.stdin.write('world');
 
-var env = {
-  'HELLO': 'WORLD'
-};
-env.__proto__ = {
-  'FOO': 'BAR'
-};
+assert.ok(cat.stdin.writable);
+assert.ok(!cat.stdin.readable);
 
-if (isWindows) {
-  var child = spawn('cmd.exe', ['/c', 'set'], {env: env});
-} else {
-  var child = spawn('/usr/bin/env', [], {env: env});
-}
-
+cat.stdin.end();
 
 var response = '';
+var exitStatus = -1;
 
-child.stdout.setEncoding('utf8');
+var gotStdoutEOF = false;
 
-child.stdout.on('data', function(chunk) {
+cat.stdout.setEncoding('utf8');
+cat.stdout.on('data', function(chunk) {
   console.log('stdout: ' + chunk);
   response += chunk;
 });
 
+cat.stdout.on('end', function() {
+  gotStdoutEOF = true;
+});
+
+
+var gotStderrEOF = false;
+
+cat.stderr.on('data', function(chunk) {
+  // shouldn't get any stderr output
+  assert.ok(false);
+});
+
+cat.stderr.on('end', function(chunk) {
+  gotStderrEOF = true;
+});
+
+
+cat.on('exit', function(status) {
+  console.log('exit event');
+  exitStatus = status;
+  if (is_windows) {
+    assert.equal('hello world\r\n', response);
+  } else {
+    assert.equal('hello world', response);
+  }
+});
+
 process.on('exit', function() {
-  assert.ok(response.indexOf('HELLO=WORLD') >= 0);
-  assert.ok(response.indexOf('FOO=BAR') >= 0);
+  assert.equal(0, exitStatus);
+  if (is_windows) {
+    assert.equal('hello world\r\n', response);
+  } else {
+    assert.equal('hello world', response);
+  }
 });

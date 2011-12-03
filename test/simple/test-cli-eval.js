@@ -21,7 +21,7 @@
 
 var common = require('../common.js'),
     assert = require('assert'),
-    child = require('child_process'),
+    exec = require('exec'),
     nodejs = '"' + process.execPath + '"';
 
 // replace \ by / because windows uses backslashes in paths, but they're still
@@ -35,13 +35,13 @@ if (module.parent) {
 }
 
 // assert that nothing is written to stdout
-child.exec(nodejs + ' --eval 42',
+exec.shell(nodejs + ' --eval 42',
     function(err, stdout, stderr) {
       assert.equal(stdout, '');
     });
 
 // assert that "42\n" is written to stderr
-child.exec(nodejs + ' --eval "console.error(42)"',
+exec.shell(nodejs + ' --eval "console.error(42)"',
     function(err, stdout, stderr) {
       assert.equal(stderr, '42\n');
     });
@@ -50,31 +50,31 @@ child.exec(nodejs + ' --eval "console.error(42)"',
 ['--print --eval', '-p -e', '-pe'].forEach(function(s) {
   var cmd = nodejs + ' ' + s + ' ';
 
-  child.exec(cmd + '42',
+  exec.shell(cmd + '42',
       function(err, stdout, stderr) {
         assert.equal(stdout, '42\n');
       });
 
-  child.exec(cmd + "'[]'",
+  exec.shell(cmd + "'[]'",
       function(err, stdout, stderr) {
         assert.equal(stdout, '[]\n');
       });
 });
 
 // assert that module loading works
-child.exec(nodejs + ' --eval "require(\'' + filename + '\')"',
+exec.shell(nodejs + ' --eval "require(\'' + filename + '\')"',
     function(status, stdout, stderr) {
       assert.equal(status.code, 42);
     });
 
 // module path resolve bug, regression test
-child.exec(nodejs + ' --eval "require(\'./test/simple/test-cli-eval.js\')"',
+exec.shell(nodejs + ' --eval "require(\'./test/simple/test-cli-eval.js\')"',
     function(status, stdout, stderr) {
       assert.equal(status.code, 42);
     });
 
 // empty program should do nothing
-child.exec(nodejs + ' -e ""', function(status, stdout, stderr) {
+exec.shell(nodejs + ' -e ""', function(status, stdout, stderr) {
   assert.equal(stdout, '');
   assert.equal(stderr, '');
 });

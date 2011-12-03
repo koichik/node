@@ -26,7 +26,7 @@ var bufPool = [];
 
 
 
-var tail = require('child_process').spawn('tail', ['-f', testFileName]);
+var tail = require('exec').spawn('tail', ['-f', testFileName]);
 tail.stdout.on('data', tailCB);
 
 function tailCB(data) {

@@ -19,35 +19,29 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var common = require('../common');
 var assert = require('assert');
-var spawn = require('child_process').spawn;
-var path = require('path');
+var common = require('../common');
+var fork = require('exec').fork;
+var args = ['foo', 'bar'];
 
-var exits = 0;
+var n = fork(common.fixturesDir + '/exec-spawn-node.js', args);
+assert.deepEqual(args, ['foo', 'bar']);
 
-var exitScript = path.join(common.fixturesDir, 'exit.js');
-var exitChild = spawn(process.argv[0], [exitScript, 23]);
-exitChild.on('exit', function(code, signal) {
-  assert.strictEqual(code, 23);
-  assert.strictEqual(signal, null);
+var messageCount = 0;
 
-  exits++;
+n.on('message', function(m) {
+  console.log('PARENT got message:', m);
+  assert.ok(m.foo);
+  messageCount++;
 });
 
+n.send({ hello: 'world' });
 
-
-var errorScript = path.join(common.fixturesDir,
-                            'child_process_should_emit_error.js');
-var errorChild = spawn(process.argv[0], [errorScript]);
-errorChild.on('exit', function(code, signal) {
-  assert.ok(code !== 0);
-  assert.strictEqual(signal, null);
-
-  exits++;
+var childExitCode = -1;
+n.on('exit', function(c) {
+  childExitCode = c;
 });
-
 
 process.on('exit', function() {
-  assert.equal(2, exits);
+  assert.ok(childExitCode == 0);
 });
