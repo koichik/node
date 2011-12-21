@@ -953,10 +953,13 @@ void MakeCallback(Handle<Object> object,
 
   TryCatch try_catch;
 
+  Isolate* isolate = Isolate::GetCurrent();
+  isolate->BeginExecution(uv_now(isolate->GetLoop()) + 5000);
   callback->Call(object, argc, argv);
+  bool terminated = isolate->EndExecution();
 
   if (try_catch.HasCaught()) {
-    FatalException(try_catch);
+    FatalException(try_catch, terminated);
   }
 }
 
@@ -1721,7 +1724,7 @@ static void OnFatalError(const char* location, const char* message) {
 }
 
 
-void FatalException(TryCatch &try_catch) {
+void FatalException(TryCatch &try_catch, bool executionTerminated) {
   HandleScope scope;
 
   // Check if uncaught_exception_counter indicates a recursion
@@ -1762,7 +1765,12 @@ void FatalException(TryCatch &try_catch) {
 
   Local<Function> emit = Local<Function>::Cast(emit_v);
 
-  Local<Value> error = try_catch.Exception();
+  Local<Value> error;
+  if (executionTerminated) {
+    error = Exception::Error(String::New("Deadline Exceeded"));
+  } else {
+    error = try_catch.Exception();
+  }
   Local<Value> event_argv[2] = { uncaught_exception_symbol_l, error };
 
   uncaught_exception_counter++;
@@ -2748,6 +2756,28 @@ void StartThread(node::Isolate* isolate,
   EmitExit(process_l);
 }
 
+static uv_thread_t terminator_thread;
+static uv_loop_t* terminator_loop;
+static uv_timer_t terminator_watcher;
+
+static void TerminatorCallback(uv_timer_t* watcher, int status) {
+  assert(watcher == &terminator_watcher);
+  Isolate::TerminateExecutionIfDeadlineExceeded(uv_now(terminator_loop));
+}
+
+static void RunTerminator(void* arg) {
+  terminator_loop = uv_loop_new();
+
+  uv_timer_init(terminator_loop, &terminator_watcher);
+  uv_timer_start(&terminator_watcher, TerminatorCallback, 100, 100);
+
+  uv_run(terminator_loop);
+}
+
+static void StartTerminatorThread() {
+  uv_thread_create(&terminator_thread, RunTerminator, NULL);
+}
+
 
 int Start(int argc, char *argv[]) {
   // This needs to run *before* V8::Initialize()
@@ -2764,6 +2794,7 @@ int Start(int argc, char *argv[]) {
   Isolate* isolate = new node::Isolate();
   isolate->tid_ = tid;
   isolate->Enter();
+  StartTerminatorThread();
   StartThread(isolate, argc, argv);
   isolate->Dispose();
 

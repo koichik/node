@@ -21,6 +21,10 @@ public:
     return (T) AO_load_read(&value_);
   }
 
+  void Set(T value) {
+    AO_store_write(&value_, (AO_t) value);
+  }
+
   T Swap(T value) {
     AO_t old_value, new_value;
 
@@ -30,6 +34,12 @@ public:
     while (!AO_compare_and_swap_full(&value_, old_value, new_value));
 
     return (T) old_value;
+  }
+
+  int Cas(T old_value, T new_value) {
+    return AO_compare_and_swap_full(&value_,
+                                    (AO_t) old_value,
+                                    (AO_t) new_value);
   }
 
 private:

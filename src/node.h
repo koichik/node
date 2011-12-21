@@ -117,7 +117,8 @@ do {                                                                      \
 enum encoding {ASCII, UTF8, BASE64, UCS2, BINARY, HEX};
 enum encoding ParseEncoding(v8::Handle<v8::Value> encoding_v,
                             enum encoding _default = BINARY);
-NODE_EXTERN void FatalException(v8::TryCatch &try_catch);
+NODE_EXTERN void FatalException(v8::TryCatch &try_catch,
+                                bool executionTerminated = false);
 void DisplayExceptionLine(v8::TryCatch &try_catch); // hack
 
 v8::Local<v8::Value> Encode(const void *buf, size_t len,

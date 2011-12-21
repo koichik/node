@@ -25,6 +25,7 @@
 #include "v8.h"
 #include "uv.h"
 #include "node_vars.h"
+#include "node_atomic.h"
 
 #ifdef NDEBUG
 # define NODE_ISOLATE_CHECK(ptr) ((void) (ptr))
@@ -58,6 +59,8 @@ public:
   static Isolate* GetCurrent() {
     return reinterpret_cast<Isolate*>(v8::Isolate::GetCurrent()->GetData());
   }
+
+  static void TerminateExecutionIfDeadlineExceeded(int64_t now);
 
   uv_loop_t* GetLoop() {
     NODE_ISOLATE_CHECK(this);
@@ -97,7 +100,21 @@ public:
   /* Shutdown the isolate. Call this method at thread death. */
   void Dispose();
 
+  void BeginExecution(int64_t deadline) {
+    deadline_ = deadline;
+    execution_status_.Set(EXECUTING);
+  }
+
+  bool EndExecution() {
+    if (execution_status_.Cas(EXECUTING, IDLE)) {
+      return false;
+    }
+    while (execution_status_.Get() != IDLE);
+    return true;
+  }
+
 private:
+  DISALLOW_COPY_AND_ASSIGN(Isolate);
 
   struct AtExitCallbackInfo {
     ngx_queue_t at_exit_callbacks_;
@@ -109,6 +126,10 @@ private:
   v8::Persistent<v8::Context> v8_context_;
   v8::Isolate* v8_isolate_;
   uv_loop_t* loop_;
+
+  enum execution_status { IDLE, EXECUTING, TERMINATING };
+  AtomicValue<enum execution_status> execution_status_;
+  int64_t deadline_;
 
   // Each isolate is a member of the static list_head.
   ngx_queue_t list_member_;

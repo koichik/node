@@ -73,6 +73,25 @@ void Isolate::JoinAll() {
   uv_mutex_unlock(&list_lock);
 }
 
+void Isolate::TerminateExecutionIfDeadlineExceeded(int64_t now) {
+  uv_mutex_lock(&list_lock);
+
+  ngx_queue_t* it;
+  ngx_queue_foreach(it, &list_head) {
+    Isolate* isolate = ngx_queue_data(it, Isolate, list_member_);
+    if (isolate->execution_status_.Get() == EXECUTING &&
+        now > isolate->deadline_) {
+      // Deadline exceeded, terminating
+      if (isolate->execution_status_.Cas(EXECUTING, TERMINATING)) {
+        v8::V8::TerminateExecution(isolate->v8_isolate_);
+        isolate->execution_status_.Set(IDLE);
+      }
+    }
+  }
+
+  uv_mutex_unlock(&list_lock);
+}
+
 
 Isolate::Isolate() {
   uv_mutex_lock(&list_lock);
