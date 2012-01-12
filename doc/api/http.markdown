@@ -538,9 +538,13 @@ Alternatively, you could just opt out of pooling entirely using `agent:false`:
       // Do stuff
     })
 
-## http.globalAgent
+### new http.Agent([options])
 
-Global instance of Agent which is used as the default for all http client requests.
+Creates a new Agent object.
+The `options` argument has the following options:
+
+- maxSockets: Determines how many concurrent sockets the agent can have open
+  per host. Defaults to `5`.
 
 ### agent.maxSockets
 
@@ -556,6 +560,65 @@ modify.
 
 An object which contains queues of requests that have not yet been assigned to 
 sockets. Do not modify.
+
+## http.globalAgent
+
+Global instance of Agent which is used as the default for all http client requests.
+
+## http.overHttpAgent(options)
+
+Creates and returns a new Agent using HTTP over HTTP tunneling proxy.
+The `options` must have a `proxy` in addition to some options same as a
+[http.Agent()](#new_http.Agent).
+The `proxy` is an object with information to connect to the proxy.
+It is similar to [http.request()](#http.request)'s `options` argument without
+`method`, `path` and `agent`.
+
+Example:
+
+    http.get({
+      host: 'www.google.com',
+      agent: http.overHttpAgent({
+        maxSockets: 2,
+        proxy: { // settings for the tunneling proxy
+          host: 'localhost',
+          port: 3128,
+
+          // This is necessary only if the proxy requires Basic Authentication
+          auth: 'user:password'
+        }
+      })
+    }, function(res) {
+      //...
+    });
+
+## http.overHttpsAgent(options)
+
+Creates and returns a new Agent using HTTP over HTTPS tunneling proxy.
+The `options` must have a `proxy` in addition to some options same as a
+[http.Agent()](#new_http.Agent).
+The `proxy` is an object with information to connect to the proxy.
+It is similar to [https.request()](https.html#https.request)'s `options`
+argument without `method`, `path` and `agent`.
+
+Example:
+
+    http.get({
+      host: 'www.google.com',
+      agent: http.overHttpsAgent({
+        maxSockets: 2,
+        proxy: { // settings for the tunneling proxy
+          host: 'localhost',
+          port: 3128,
+
+          // These are necessary only if the proxy requires client certification
+          key: fs.readFileSync('client-key.pem'),
+          cert: fs.readFileSync('client-cert.pem')
+        }
+      })
+    }, function(res) {
+      //...
+    });
 
 
 ## http.ClientRequest

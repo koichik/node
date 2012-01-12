@@ -61,7 +61,7 @@ Example:
       console.error(e);
     });
 
-The options argument has the following options
+The `options` argument has the following options
 
 - host: IP or domain of host to make request to. Defaults to `'localhost'`.
 - port: port of host to request to. Defaults to 443.
@@ -99,7 +99,8 @@ specified. However, a [globalAgent](#https.globalAgent) silently ignores these.
   fails. Verification happens at the connection level, *before* the HTTP
   request is sent. Default `false`.
 
-In order to specify these options, use a custom `Agent`.
+In order to specify these options, pass them to a custom
+[Agent](#new_https.Agent).
 
 Example:
 
@@ -108,10 +109,11 @@ Example:
       port: 443,
       path: '/',
       method: 'GET',
-      key: fs.readFileSync('test/fixtures/keys/agent2-key.pem'),
-      cert: fs.readFileSync('test/fixtures/keys/agent2-cert.pem')
+      agent: new https.Agent({
+        key: fs.readFileSync('test/fixtures/keys/agent2-key.pem'),
+        cert: fs.readFileSync('test/fixtures/keys/agent2-cert.pem')
+      })
     };
-    options.agent = new https.Agent(options);
 
     var req = https.request(options, function(res) {
       ...
@@ -161,8 +163,73 @@ Example:
 An Agent object for HTTPS similar to [http.Agent](http.html#http.Agent).
 See [https.request()](#https.request) for more information.
 
+### new https.Agent([options])
+
+Creates a new Agent object.
+The `options` argument has the following options:
+
+- maxSockets: Determines how many concurrent sockets the agent can have open
+  per host. Defaults to `5`.
+
+The options from [tls.connect()](tls.html#tls.connect) can also be specified.
+See [https.request()](#https.request) for more information.
 
 ## https.globalAgent
 
 Global instance of [https.Agent](#https.Agent) which is used as the default
 for all HTTPS client requests.
+
+## https.overHttpAgent(options)
+
+Creates and returns a new Agent using HTTPS over HTTP tunneling proxy.
+The `options` must have a `proxy` in addition to some options same as a
+[https.Agent()](#new_https.Agent).
+The `proxy` is an object with information to connect to the proxy.
+It is similar to [https.request()](#https.request)'s `options` argument without
+`method`, `path` and `agent`.
+
+Example:
+
+    https.get({
+      host: 'github.com',
+      agent: https.overHttpAgent({
+        maxSockets: 2,
+        proxy: { // settings for the tunneling proxy
+          host: 'localhost',
+          port: 3128,
+
+          // This is necessary only if the proxy requires Basic Authentication
+          auth: 'user:password'
+        }
+      })
+    }, function(res) {
+      //...
+    });
+
+## https.overHttpsAgent(options)
+
+Creates and returns a new Agent using HTTPS over HTTPS tunneling proxy.
+The `options` must have a `proxy` in addition to some options same as a
+[https.Agent()](#new_https.Agent).
+The `proxy` is an object with information to connect to the proxy.
+It is similar to [https.request()](https.html#https.request)'s `options`
+argument without `method`, `path` and `agent`.
+
+Example:
+
+    https.get({
+      host: 'github.com',
+      agent: https.overHttpsAgent({
+        maxSockets: 2,
+        proxy: { // settings for the tunneling proxy
+          host: 'localhost',
+          port: 3128,
+
+          // These are necessary only if the proxy requires client certification
+          key: fs.readFileSync('client2-key.pem'),
+          cert: fs.readFileSync('client2-cert.pem')
+        }
+      })
+    }, function(res) {
+      //...
+    });
