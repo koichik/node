@@ -69,3 +69,16 @@ assert.equal(false, util.isError({}))
 assert.equal(false, util.isError({ name: 'Error', message: '' }))
 assert.equal(false, util.isError([]))
 assert.equal(false, util.isError(Object.create(Error.prototype)))
+
+// mergeOptions
+assert.deepEqual(util.mergeOptions({}), {});
+assert.deepEqual(util.mergeOptions({foo: 0}), {foo: 0});
+assert.deepEqual(util.mergeOptions({foo: 0}, undefined), {foo: 0});
+assert.deepEqual(util.mergeOptions({foo: 0}, {foo: 1}), {foo: 1});
+assert.deepEqual(util.mergeOptions({foo: 0}, {bar: 1}), {foo: 0, bar: 1});
+assert.deepEqual(util.mergeOptions({foo: 0}, {bar: 1, baz: 2}),
+                 {foo: 0, bar:1, baz:2});
+assert.deepEqual(util.mergeOptions({foo: 0}, {bar: 1, baz: 2}, {hoge: 3}),
+                 {foo: 0, bar:1, baz:2, hoge: 3});
+assert.deepEqual(util.mergeOptions({foo: 0}, {bar: 1, baz: undefined}),
+                 {foo: 0, bar:1});
