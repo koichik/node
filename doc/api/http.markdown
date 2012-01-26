@@ -286,12 +286,14 @@ Sends a HTTP/1.1 100 Continue message to the client, indicating that
 the request body should be sent. See the [checkContinue](#event_checkContinue_) event on
 `Server`.
 
-### response.writeHead(statusCode, [reasonPhrase], [headers])
+### response.writeHead(statusCode, [reasonPhrase], [headers], [noAssert])
 
 Sends a response header to the request. The status code is a 3-digit HTTP
-status code, like `404`. The last argument, `headers`, are the response headers.
+status code, like `404`.
 Optionally one can give a human-readable `reasonPhrase` as the second
 argument.
+`headers` are the response headers. The header field values are verified
+unless `noAssert` is `true`. An `Error` is thrown if verification fails.
 
 Example:
 
@@ -326,11 +328,13 @@ Example:
 After response header was sent to the client, this property indicates the
 status code which was sent out.
 
-### response.setHeader(name, value)
+### response.setHeader(name, value, [noAssert])
 
 Sets a single header value for implicit headers.  If this header already exists
 in the to-be-sent headers, its value will be replaced.  Use an array of strings
 here if you need to send multiple headers with the same name.
+The header field value is verified unless `noAssert` is `true`.  An `Error`
+is thrown if verification fails.
 
 Example:
 
@@ -381,10 +385,12 @@ header information and the first body to the client. The second time
 data, and sends that separately. That is, the response is buffered up to the
 first chunk of body.
 
-### response.addTrailers(headers)
+### response.addTrailers(headers, [noAssert])
 
 This method adds HTTP trailing headers (a header but at the end of the
 message) to the response.
+The header field values are verified unless `noAssert` is `true`.
+An `Error` is thrown if verification fails.
 
 Trailers will **only** be emitted if chunked encoding is used for the
 response; if it is not (e.g., if the request was HTTP/1.0), they will
@@ -428,6 +434,10 @@ Options:
 - `path`: Request path. Defaults to `'/'`. Should include query string if any.
   E.G. `'/index.html?page=12'`
 - `headers`: An object containing request headers.
+  The header field values are verified unless `noAssertHeaders` is `true`.
+  An `Error` is thrown if verification fails.
+- `noAssertHeaders`: If `true`, `headers` field values are not verified.
+  Defaults to `false`.
 - `auth`: Basic authentication i.e. `'user:password'` to compute an
   Authorization header.
 - `agent`: Controls [Agent](#http.Agent) behavior. When an Agent is used
