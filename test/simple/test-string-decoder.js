@@ -82,3 +82,18 @@ for (var j = 2; j < buffer.length; j++) {
 }
 console.log(' crayon!');
 
+// UCS2
+decoder = new StringDecoder('ucs2');
+buffer = new Buffer('ab', 'ucs2');
+assert.equal(decoder.write(buffer), 'ab'); // 2 complete chars
+buffer = new Buffer('abc', 'ucs2');
+assert.equal(decoder.write(buffer.slice(0, 3)), 'a'); // 'a' and first of 'b'
+assert.equal(decoder.write(buffer.slice(3, 6)), 'bc'); // second of 'b' and 'c'
+
+// Base64
+decoder = new StringDecoder('base64');
+buffer = new Buffer('41424344454647', 'hex');
+assert.equal(decoder.write(buffer.slice(0, 1)), '');
+assert.equal(decoder.write(buffer.slice(1, 3)), 'QUJD');
+assert.equal(decoder.write(buffer.slice(3, 7)), 'REVG');
+assert.equal(decoder.end(), 'Rw==');
